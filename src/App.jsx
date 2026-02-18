@@ -143,11 +143,11 @@ export default function App() {
       });
     } catch(err) {
       console.error("Erreur:", err);
+    } finally {
+      setSaving(false);
+      setSubmitted(true);
+      setForm({ prenom:"", nom:"", email:"", telephone:"", jeu:"", date_retrait:"", date_retour:"", adhesion:"", commentaire:"" });
     }
-
-    setSaving(false);
-    setSubmitted(true);
-    setForm({ prenom:"", nom:"", email:"", telephone:"", jeu:"", date_retrait:"", date_retour:"", adhesion:"", commentaire:"" });
   }
 
   const C = "#1f94a2", G = "#6dbd69";
