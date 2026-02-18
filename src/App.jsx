@@ -251,7 +251,7 @@ export default function App() {
                         <span style={S.badge(jeuColor(r.jeu))}>{r.jeu}</span>
                         <div style={{ marginTop: "0.4rem", fontWeight: 600 }}>{r.prenom} {r.nom}</div>
                         <div style={{ fontSize: "0.8rem", color: "#666" }}>{formatDate(r.date_retrait)} → {formatDate(r.date_retour)}</div>
-                        {r.adhesion && <div style={{ fontSize: "0.78rem", color: "#888" }}>{r.adhesion === "oui" ? "✅ Adhérent" : "🆕 Souhaite adhérer"}</div>}
+                        {r.adhesion && <div style={{ fontSize: "0.78rem", color: "#888" }}>{"✅ Adhérent"}</div>}
                       </div>
                       <div style={{ fontSize: "0.78rem", color: "#888", textAlign: "right" }}>
                         {r.email}<br />{r.telephone}
@@ -293,9 +293,9 @@ export default function App() {
                   <label style={S.label}>Êtes-vous adhérent ? *</label>
                   <select style={S.input} name="adhesion" required value={form.adhesion} onChange={handleChange}>
                     <option value="">-- Choisissez --</option>
-                    <option value="oui">Je suis déjà adhérent</option>
-                    <option value="non">Je souhaite adhérer</option>
+                    <option value="oui">Je suis adhérent</option>
                   </select>
+                  {!form.adhesion && <p style={{ fontSize: "0.82rem", color: "#c0392b", marginTop: "0.5rem", background: "#fff3f3", padding: "0.6rem 0.8rem", borderRadius: "6px", borderLeft: "3px solid #c0392b" }}>⚠️ La réservation est réservée aux adhérents. Pour adhérer : <strong>ludotheque@pepbretillarmor.org</strong></p>}
                 </div>
 
                 <div style={{ marginTop: "1.5rem" }}><div style={S.secTitle}>Le jeu souhaité</div></div>
@@ -318,7 +318,7 @@ export default function App() {
                   <div style={S.field}>
                     <label style={S.label}>Date de retour *</label>
                     <input style={S.input} type="date" name="date_retour" required value={form.date_retour} min={form.date_retrait} max={maxRetour} onChange={handleChange} disabled={!form.date_retrait} />
-                    <p style={{ fontSize: "0.75rem", color: "#888", marginTop: "0.2rem" }}>Maximum 2 semaines</p>
+                    <p style={{ fontSize: "0.75rem", color: "#888", marginTop: "0.2rem" }}>Maximum 31 jours</p>
                   </div>
                 </div>
 
@@ -356,7 +356,7 @@ export default function App() {
                       <span style={S.badge(jeuColor(r.jeu))}>{r.jeu}</span>
                       <div style={{ marginTop: "0.4rem", fontWeight: 600 }}>{r.prenom} {r.nom}</div>
                       <div style={{ fontSize: "0.82rem", color: "#555" }}>📅 {formatDate(r.date_retrait)} → {formatDate(r.date_retour)}</div>
-                      {r.adhesion && <div style={{ fontSize: "0.78rem", color: "#888" }}>{r.adhesion === "oui" ? "✅ Adhérent" : "🆕 Souhaite adhérer"}</div>}
+                      {r.adhesion && <div style={{ fontSize: "0.78rem", color: "#888" }}>{"✅ Adhérent"}</div>}
                       {r.commentaire && <div style={{ fontSize: "0.8rem", color: "#666", fontStyle: "italic" }}>"{r.commentaire}"</div>}
                     </div>
                     <div style={{ fontSize: "0.8rem", color: "#888", textAlign: "right" }}>
