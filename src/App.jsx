@@ -116,21 +116,21 @@ export default function App() {
 
     // 2. Envoi email via Formspree
     try {
+      const formData = new FormData();
+      formData.append("_replyto", form.email);
+      formData.append("_subject", "Nouvelle réservation – " + form.jeu);
+      formData.append("Prénom", form.prenom);
+      formData.append("Nom", form.nom);
+      formData.append("Email", form.email);
+      formData.append("Téléphone", form.telephone || "Non renseigné");
+      formData.append("Jeu", form.jeu);
+      formData.append("Date de retrait", formatDate(form.date_retrait));
+      formData.append("Date de retour", formatDate(form.date_retour));
+      formData.append("Commentaire", form.commentaire || "Aucun");
       await fetch("https://formspree.io/f/mjgeoraw", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          _replyto: form.email,
-          _subject: "Nouvelle réservation – " + form.jeu,
-          Prénom: form.prenom,
-          Nom: form.nom,
-          Email: form.email,
-          Téléphone: form.telephone || "Non renseigné",
-          Jeu: form.jeu,
-          "Date de retrait": formatDate(form.date_retrait),
-          "Date de retour": formatDate(form.date_retour),
-          Commentaire: form.commentaire || "Aucun",
-        })
+        body: formData,
+        headers: { "Accept": "application/json" }
       });
     } catch (err) {
       console.error("Erreur envoi:", err);
