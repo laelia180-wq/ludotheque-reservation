@@ -114,27 +114,29 @@ export default function App() {
     const newRes = { ...form, id: Date.now(), created: new Date().toISOString() };
     await saveReservations([...reservations, newRes]);
 
-    // 2. Envoi email via Formspree
-    try {
-      const formData = new FormData();
-      formData.append("_replyto", form.email);
-      formData.append("_subject", "Nouvelle réservation – " + form.jeu);
-      formData.append("Prénom", form.prenom);
-      formData.append("Nom", form.nom);
-      formData.append("Email", form.email);
-      formData.append("Téléphone", form.telephone || "Non renseigné");
-      formData.append("Jeu", form.jeu);
-      formData.append("Date de retrait", formatDate(form.date_retrait));
-      formData.append("Date de retour", formatDate(form.date_retour));
-      formData.append("Commentaire", form.commentaire || "Aucun");
-      await fetch("https://formspree.io/f/mjgeoraw", {
-        method: "POST",
-        body: formData,
-        headers: { "Accept": "application/json" }
-      });
-    } catch (err) {
-      console.error("Erreur envoi:", err);
-    }
+    // 2. Ouvre le client mail avec toutes les infos pré-remplies
+    const sujet = encodeURIComponent("Nouvelle réservation – " + form.jeu);
+    const corps = encodeURIComponent(
+      "Nouvelle demande de réservation
+
+" +
+      "Prénom : " + form.prenom + "
+" +
+      "Nom : " + form.nom + "
+" +
+      "Email : " + form.email + "
+" +
+      "Téléphone : " + (form.telephone || "Non renseigné") + "
+" +
+      "Jeu : " + form.jeu + "
+" +
+      "Date de retrait : " + formatDate(form.date_retrait) + "
+" +
+      "Date de retour : " + formatDate(form.date_retour) + "
+" +
+      "Commentaire : " + (form.commentaire || "Aucun")
+    );
+    window.location.href = "mailto:l.chaplart@pepbretillarmor.org?subject=" + sujet + "&body=" + corps;
 
     setSaving(false);
     setSubmitted(true);
