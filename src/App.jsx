@@ -121,33 +121,29 @@ export default function App() {
     const newRes = { ...form, id: Date.now(), created: new Date().toISOString() };
     await saveRes([...reservations, newRes]);
 
-    // 2. Envoi email Web3Forms
-    try {
-      await fetch("https://api.web3forms.com/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Accept": "application/json" },
-        body: JSON.stringify({
-          access_key: "a64bb057-88b9-42ee-a773-3dd1a0a0a443",
-          subject: "Nouvelle reservation - " + form.jeu,
-          from_name: form.prenom + " " + form.nom,
-          replyto: form.email,
-          Prenom: form.prenom,
-          Nom: form.nom,
-          Email: form.email,
-          Telephone: form.telephone || "Non renseigne",
-          Jeu: form.jeu,
-          Date_retrait: formatDate(form.date_retrait),
-          Date_retour: formatDate(form.date_retour),
-          Commentaire: form.commentaire || "Aucun"
-        })
-      });
-    } catch(err) {
-      console.error("Erreur:", err);
-    } finally {
-      setSaving(false);
-      setSubmitted(true);
-      setForm({ prenom:"", nom:"", email:"", telephone:"", jeu:"", date_retrait:"", date_retour:"", adhesion:"", commentaire:"" });
-    }
+    // 2. Envoi email Web3Forms en arriere-plan (sans await)
+    fetch("https://api.web3forms.com/submit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify({
+        access_key: "a64bb057-88b9-42ee-a773-3dd1a0a0a443",
+        subject: "Nouvelle reservation - " + form.jeu,
+        from_name: form.prenom + " " + form.nom,
+        replyto: form.email,
+        Prenom: form.prenom,
+        Nom: form.nom,
+        Email: form.email,
+        Telephone: form.telephone || "Non renseigne",
+        Jeu: form.jeu,
+        Date_retrait: formatDate(form.date_retrait),
+        Date_retour: formatDate(form.date_retour),
+        Commentaire: form.commentaire || "Aucun"
+      })
+    }).catch(err => console.error("Erreur Web3Forms:", err));
+
+    setSaving(false);
+    setSubmitted(true);
+    setForm({ prenom:"", nom:"", email:"", telephone:"", jeu:"", date_retrait:"", date_retour:"", adhesion:"", commentaire:"" });
   }
 
   const C = "#1f94a2", G = "#6dbd69";
