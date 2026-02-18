@@ -115,27 +115,21 @@ export default function App() {
     await saveReservations([...reservations, newRes]);
 
     // 2. Ouvre le client mail avec toutes les infos pré-remplies
-    const sujet = encodeURIComponent("Nouvelle réservation – " + form.jeu);
-    const corps = encodeURIComponent(
-      "Nouvelle demande de réservation
-
-" +
-      "Prénom : " + form.prenom + "
-" +
-      "Nom : " + form.nom + "
-" +
-      "Email : " + form.email + "
-" +
-      "Téléphone : " + (form.telephone || "Non renseigné") + "
-" +
-      "Jeu : " + form.jeu + "
-" +
-      "Date de retrait : " + formatDate(form.date_retrait) + "
-" +
-      "Date de retour : " + formatDate(form.date_retour) + "
-" +
-      "Commentaire : " + (form.commentaire || "Aucun")
-    );
+    const sujet = encodeURIComponent("Nouvelle réservation - " + form.jeu);
+    const lignes = [
+      "Nouvelle demande de réservation",
+      "",
+      "Prenom : " + form.prenom,
+      "Nom : " + form.nom,
+      "Email : " + form.email,
+      "Telephone : " + (form.telephone || "Non renseigne"),
+      "Jeu : " + form.jeu,
+      "Date de retrait : " + formatDate(form.date_retrait),
+      "Date de retour : " + formatDate(form.date_retour),
+      "Commentaire : " + (form.commentaire || "Aucun"),
+    ];
+    const corps = encodeURIComponent(lignes.join("
+"));
     window.location.href = "mailto:l.chaplart@pepbretillarmor.org?subject=" + sujet + "&body=" + corps;
 
     setSaving(false);
