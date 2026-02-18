@@ -109,19 +109,20 @@ export default function App() {
     }
   }
 
-  async function handleSubmit(e) {
+  function handleSubmit(e) {
     e.preventDefault();
     if (form.adhesion.toUpperCase() !== "LUDO2026") {
       alert("Code adherent invalide.");
       return;
     }
-    setSaving(true);
 
     // 1. Enregistrement calendrier
     const newRes = { ...form, id: Date.now(), created: new Date().toISOString() };
-    await saveRes([...reservations, newRes]);
+    const updated = [...reservations, newRes];
+    window.storage.set("reservations", JSON.stringify(updated), true).catch(() => {});
+    setReservations(updated);
 
-    // 2. Envoi email Web3Forms en arriere-plan (sans await)
+    // 2. Envoi email Web3Forms en arriere-plan
     fetch("https://api.web3forms.com/submit", {
       method: "POST",
       headers: { "Content-Type": "application/json", "Accept": "application/json" },
@@ -139,9 +140,9 @@ export default function App() {
         Date_retour: formatDate(form.date_retour),
         Commentaire: form.commentaire || "Aucun"
       })
-    }).catch(err => console.error("Erreur Web3Forms:", err));
+    }).catch(() => {});
 
-    setSaving(false);
+    // 3. Confirmation immediate
     setSubmitted(true);
     setForm({ prenom:"", nom:"", email:"", telephone:"", jeu:"", date_retrait:"", date_retour:"", adhesion:"", commentaire:"" });
   }
