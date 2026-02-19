@@ -196,7 +196,7 @@ export default function App() {
   }
 
   const S = {
-    app: { fontFamily: "sans-serif", background: "#f0ede6", minHeight: "100vh" },
+    app: { fontFamily: "sans-serif", background: "#ffffff", minHeight: "100vh" },
     header: { background: "#fff", padding: "0.75rem 2rem", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem", borderBottom: "3px solid " + C, boxShadow: "0 2px 8px rgba(0,0,0,0.07)" },
     nav: { display: "flex", gap: "0.5rem", flexWrap: "wrap" },
     navBtn: (a) => ({ padding: "0.5rem 1rem", borderRadius: "20px", border: "none", cursor: "pointer", fontSize: "0.85rem", fontWeight: 600, background: a ? C : "#eee", color: a ? "#fff" : C }),
@@ -224,7 +224,7 @@ export default function App() {
   };
 
   if (loading) return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "#f0ede6" }}>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "#ffffff" }}>
       <div style={{ textAlign: "center", color: C, fontSize: "1.2rem" }}>
         <div style={{ fontSize: "2.5rem", marginBottom: "1rem" }}>🎲</div>
         Chargement...
