@@ -122,6 +122,26 @@ export default function App() {
     setReservations(updated);
 
     // 2. Envoi email Web3Forms en arriere-plan
+    const mailAdherent = form.email;
+    const sujetConfirm = encodeURIComponent("Confirmation de votre reservation - " + form.jeu);
+    const corpsConfirm = encodeURIComponent("Bonjour " + form.prenom + "," + "
+
+Votre reservation du jeu " + form.jeu + " du " + formatDate(form.date_retrait) + " au " + formatDate(form.date_retour) + " est confirmee." + "
+
+A bientot a la ludotheque Du Bout des Doigts !" + "
+
+L equipe des PEP Bretill Armor");
+    const sujetRefus = encodeURIComponent("Votre demande de reservation - " + form.jeu);
+    const corpsRefus = encodeURIComponent("Bonjour " + form.prenom + "," + "
+
+Nous sommes desoles, votre demande de reservation du jeu " + form.jeu + " du " + formatDate(form.date_retrait) + " au " + formatDate(form.date_retour) + " ne peut pas etre acceptee." + "
+
+N hesitez pas a nous contacter pour choisir une autre date ou un autre jeu." + "
+
+L equipe des PEP Bretill Armor");
+    const lienConfirm = "mailto:" + mailAdherent + "?subject=" + sujetConfirm + "&body=" + corpsConfirm;
+    const lienRefus = "mailto:" + mailAdherent + "?subject=" + sujetRefus + "&body=" + corpsRefus;
+
     fetch("https://api.web3forms.com/submit", {
       method: "POST",
       headers: { "Content-Type": "application/json", "Accept": "application/json" },
@@ -137,7 +157,10 @@ export default function App() {
         Jeu: form.jeu,
         Date_retrait: formatDate(form.date_retrait),
         Date_retour: formatDate(form.date_retour),
-        Commentaire: form.commentaire || "Aucun"
+        Commentaire: form.commentaire || "Aucun",
+        "--- Actions ---": "Cliquez sur un lien ci-dessous pour repondre a l adherent",
+        "CONFIRMER la reservation": lienConfirm,
+        "REFUSER la reservation": lienRefus
       })
     }).catch(() => {});
 
