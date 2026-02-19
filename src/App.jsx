@@ -65,21 +65,26 @@ function genCode() {
   return "RES-" + Math.floor(1000 + Math.random() * 9000);
 }
 
-function loadFromStorage() {
+const STORAGE_KEY = "ludo-reservations-v2";
+
+async function loadFromStorage() {
   try {
-    const r = localStorage.getItem("reservations");
-    return r ? JSON.parse(r) : [];
+    const result = await window.storage.get(STORAGE_KEY, true);
+    return result ? JSON.parse(result.value) : [];
   } catch { return []; }
 }
 
-function saveToStorage(list) {
-  localStorage.setItem("reservations", JSON.stringify(list));
+async function saveToStorage(list) {
+  try {
+    await window.storage.set(STORAGE_KEY, JSON.stringify(list), true);
+  } catch (e) { console.error("Erreur sauvegarde:", e); }
 }
 
 export default function App() {
   const [view, setView] = useState("calendrier");
   const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [calMonth, setCalMonth] = useState(today.getMonth());
   const [calYear, setCalYear] = useState(today.getFullYear());
   const [selectedDay, setSelectedDay] = useState(null);
@@ -92,8 +97,14 @@ export default function App() {
   const [erreurDoublon, setErreurDoublon] = useState("");
 
   useEffect(() => {
-    setReservations(loadFromStorage());
-    setLoading(false);
+    loadFromStorage().then(data => {
+      setReservations(data);
+      setLoading(false);
+    });
+    const interval = setInterval(() => {
+      loadFromStorage().then(data => setReservations(data));
+    }, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   function resForDay(date) {
@@ -126,7 +137,7 @@ export default function App() {
     }
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     if (form.adhesion.toUpperCase() !== "LUDO2026") {
       alert("Code adherent invalide.");
@@ -143,8 +154,10 @@ export default function App() {
     const code = genCode();
     const newRes = { ...form, id: Date.now(), code: code, created: new Date().toISOString() };
     const updated = [...reservations, newRes];
-    saveToStorage(updated);
+    setSaving(true);
+    await saveToStorage(updated);
     setReservations(updated);
+    setSaving(false);
 
     // Email Web3Forms
     const sujetConfirm = encodeURIComponent("Confirmation reservation - " + form.jeu);
@@ -180,7 +193,7 @@ export default function App() {
     setForm({ prenom:"", nom:"", email:"", telephone:"", jeu:"", date_retrait:"", date_retour:"", adhesion:"", commentaire:"" });
   }
 
-  function handleCancel(e) {
+  async function handleCancel(e) {
     e.preventDefault();
     const code = cancelCode.trim().toUpperCase();
     const idx = reservations.findIndex(r => r.code && r.code.toUpperCase() === code);
@@ -189,16 +202,18 @@ export default function App() {
       return;
     }
     const updated = reservations.filter((_, i) => i !== idx);
-    saveToStorage(updated);
+    setSaving(true);
+    await saveToStorage(updated);
     setReservations(updated);
+    setSaving(false);
     setCancelMsg("ok");
     setCancelCode("");
   }
 
   const S = {
-    app: { fontFamily: "sans-serif", background: "#ffffff", minHeight: "100vh" },
+    app: { fontFamily: "sans-serif", background: "#f0ede6", minHeight: "100vh" },
     header: { background: "#fff", padding: "0.75rem 2rem", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem", borderBottom: "3px solid " + C, boxShadow: "0 2px 8px rgba(0,0,0,0.07)" },
-    nav: { display: "flex", gap: "0.5rem", flexWrap: "wrap" },
+    nav: { display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" },
     navBtn: (a) => ({ padding: "0.5rem 1rem", borderRadius: "20px", border: "none", cursor: "pointer", fontSize: "0.85rem", fontWeight: 600, background: a ? C : "#eee", color: a ? "#fff" : C }),
     main: { maxWidth: "900px", margin: "0 auto", padding: "2rem 1rem" },
     card: { background: "#fff", borderRadius: "16px", padding: "1.5rem", boxShadow: "0 2px 16px rgba(0,0,0,0.07)", marginBottom: "1.5rem" },
@@ -224,10 +239,10 @@ export default function App() {
   };
 
   if (loading) return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "#ffffff" }}>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "#f0ede6" }}>
       <div style={{ textAlign: "center", color: C, fontSize: "1.2rem" }}>
         <div style={{ fontSize: "2.5rem", marginBottom: "1rem" }}>🎲</div>
-        Chargement...
+        Chargement des reservations partagees...
       </div>
     </div>
   );
@@ -241,6 +256,7 @@ export default function App() {
           <button style={S.navBtn(view === "reserver")} onClick={() => { setView("reserver"); setSubmitted(false); setErreurDoublon(""); }}>✏️ Reserver</button>
           <button style={S.navBtn(view === "liste")} onClick={() => setView("liste")}>📋 Reservations</button>
           <button style={S.navBtn(view === "annuler")} onClick={() => { setView("annuler"); setCancelMsg(""); }}>❌ Annuler</button>
+          <button style={{ padding: "0.5rem 0.8rem", borderRadius: "20px", border: "1.5px solid #ddd", cursor: "pointer", fontSize: "0.82rem", fontWeight: 600, background: "#fff", color: "#555" }} title="Rafraichir les reservations" onClick={() => loadFromStorage().then(d => setReservations(d))}>🔄</button>
         </nav>
       </header>
 
@@ -355,7 +371,8 @@ export default function App() {
                   <textarea style={{ ...S.inp, minHeight: "80px", resize: "vertical" }} name="commentaire" value={form.commentaire} onChange={handleChange} />
                 </div>
 
-                <button type="submit" style={S.btn}>Envoyer ma demande de reservation</button>
+                {saving && <div style={{ ...S.alertGreen, textAlign: "center", marginBottom: "0.5rem" }}>⏳ Sauvegarde en cours...</div>}
+                <button type="submit" style={{ ...S.btn, opacity: saving ? 0.7 : 1 }} disabled={saving}>{saving ? "Envoi..." : "Envoyer ma demande de reservation"}</button>
               </form>
             )}
           </div>
@@ -395,7 +412,8 @@ export default function App() {
                   <label style={S.lbl}>Code d annulation</label>
                   <input style={{ ...S.inp, letterSpacing: "0.15em", textTransform: "uppercase", fontSize: "1.1rem" }} value={cancelCode} onChange={e => { setCancelCode(e.target.value); setCancelMsg(""); }} placeholder="RES-XXXX" required />
                 </div>
-                <button type="submit" style={{ ...S.btn, background: "#c0392b" }}>Annuler ma reservation</button>
+                {saving && <div style={{ ...S.alertGreen, textAlign: "center", marginBottom: "0.5rem" }}>⏳ Annulation en cours...</div>}
+                <button type="submit" style={{ ...S.btn, background: "#c0392b", opacity: saving ? 0.7 : 1 }} disabled={saving}>{saving ? "Annulation..." : "Annuler ma reservation"}</button>
               </form>
             )}
           </div>
