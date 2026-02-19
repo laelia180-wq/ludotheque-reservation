@@ -66,17 +66,16 @@ export default function App() {
 
   useEffect(() => { loadRes(); }, []);
 
-  async function loadRes() {
-    setLoading(true);
+  function loadRes() {
     try {
-      const r = await window.storage.get("reservations", true);
-      setReservations(r ? JSON.parse(r.value) : []);
+      const r = localStorage.getItem("reservations");
+      setReservations(r ? JSON.parse(r) : []);
     } catch { setReservations([]); }
     setLoading(false);
   }
 
-  async function saveRes(list) {
-    await window.storage.set("reservations", JSON.stringify(list), true);
+  function saveRes(list) {
+    localStorage.setItem("reservations", JSON.stringify(list));
     setReservations(list);
   }
 
@@ -119,7 +118,7 @@ export default function App() {
     // 1. Enregistrement calendrier
     const newRes = { ...form, id: Date.now(), created: new Date().toISOString() };
     const updated = [...reservations, newRes];
-    window.storage.set("reservations", JSON.stringify(updated), true).catch(() => {});
+    localStorage.setItem("reservations", JSON.stringify(updated));
     setReservations(updated);
 
     // 2. Envoi email Web3Forms en arriere-plan
