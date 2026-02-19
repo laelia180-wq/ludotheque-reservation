@@ -17,6 +17,7 @@ const MOIS = ["Janvier","Fevrier","Mars","Avril","Mai","Juin","Juillet","Aout","
 const JOURS = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
 const today = new Date(); today.setHours(0,0,0,0);
 const todayStr = today.toISOString().split("T")[0];
+const C = "#1f94a2", G = "#6dbd69";
 
 function formatDate(str) {
   if (!str) return "";
@@ -40,6 +41,14 @@ function isBetween(date, start, end) {
   return d >= s && d <= e;
 }
 
+function chevauchement(r, dateDebut, dateFin) {
+  const s1 = new Date(r.date_retrait); s1.setHours(0,0,0,0);
+  const e1 = new Date(r.date_retour); e1.setHours(0,0,0,0);
+  const s2 = new Date(dateDebut); s2.setHours(0,0,0,0);
+  const e2 = new Date(dateFin); e2.setHours(0,0,0,0);
+  return s1 <= e2 && e1 >= s2;
+}
+
 function jeuColor(jeu) {
   const all = Object.values(JEUX).flat();
   const idx = all.indexOf(jeu);
@@ -52,6 +61,21 @@ function addDays(dateStr, n) {
   return d.toISOString().split("T")[0];
 }
 
+function genCode() {
+  return "RES-" + Math.floor(1000 + Math.random() * 9000);
+}
+
+function loadFromStorage() {
+  try {
+    const r = localStorage.getItem("reservations");
+    return r ? JSON.parse(r) : [];
+  } catch { return []; }
+}
+
+function saveToStorage(list) {
+  localStorage.setItem("reservations", JSON.stringify(list));
+}
+
 export default function App() {
   const [view, setView] = useState("calendrier");
   const [reservations, setReservations] = useState([]);
@@ -61,23 +85,16 @@ export default function App() {
   const [selectedDay, setSelectedDay] = useState(null);
   const [form, setForm] = useState({ prenom:"", nom:"", email:"", telephone:"", jeu:"", date_retrait:"", date_retour:"", adhesion:"", commentaire:"" });
   const [submitted, setSubmitted] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [submittedCode, setSubmittedCode] = useState("");
   const [filterJeu, setFilterJeu] = useState("");
+  const [cancelCode, setCancelCode] = useState("");
+  const [cancelMsg, setCancelMsg] = useState("");
+  const [erreurDoublon, setErreurDoublon] = useState("");
 
-  useEffect(() => { loadRes(); }, []);
-
-  function loadRes() {
-    try {
-      const r = localStorage.getItem("reservations");
-      setReservations(r ? JSON.parse(r) : []);
-    } catch { setReservations([]); }
+  useEffect(() => {
+    setReservations(loadFromStorage());
     setLoading(false);
-  }
-
-  function saveRes(list) {
-    localStorage.setItem("reservations", JSON.stringify(list));
-    setReservations(list);
-  }
+  }, []);
 
   function resForDay(date) {
     return reservations.filter(r => isBetween(date, r.date_retrait, r.date_retour));
@@ -101,6 +118,7 @@ export default function App() {
 
   function handleChange(e) {
     const { name, value } = e.target;
+    setErreurDoublon("");
     if (name === "date_retrait") {
       setForm(f => ({ ...f, date_retrait: value, date_retour: "" }));
     } else {
@@ -115,28 +133,36 @@ export default function App() {
       return;
     }
 
-    // 1. Enregistrement calendrier
-    const newRes = { ...form, id: Date.now(), created: new Date().toISOString() };
+    // Verification doublon
+    const conflit = reservations.find(r => r.jeu === form.jeu && chevauchement(r, form.date_retrait, form.date_retour));
+    if (conflit) {
+      setErreurDoublon("Ce jeu est deja reserve du " + formatDate(conflit.date_retrait) + " au " + formatDate(conflit.date_retour) + ". Veuillez choisir d autres dates.");
+      return;
+    }
+
+    const code = genCode();
+    const newRes = { ...form, id: Date.now(), code: code, created: new Date().toISOString() };
     const updated = [...reservations, newRes];
-    localStorage.setItem("reservations", JSON.stringify(updated));
+    saveToStorage(updated);
     setReservations(updated);
 
-    // 2. Envoi email Web3Forms en arriere-plan
-    const mailAdherent = form.email;
+    // Email Web3Forms
     const sujetConfirm = encodeURIComponent("Confirmation reservation - " + form.jeu);
-    const corpsConfirm = "Bonjour " + form.prenom + ",%0A%0AVotre reservation du jeu " + form.jeu + " du " + formatDate(form.date_retrait) + " au " + formatDate(form.date_retour) + " est confirmee.%0A%0AA bientot !%0A%0AL equipe PEP Bretill Armor";
-    const sujetRefus = encodeURIComponent("Demande de reservation refusee - " + form.jeu);
-    const corpsRefus = "Bonjour " + form.prenom + ",%0A%0ANous sommes desoles, votre demande pour le jeu " + form.jeu + " du " + formatDate(form.date_retrait) + " au " + formatDate(form.date_retour) + " ne peut pas etre acceptee.%0A%0AN hesitez pas a nous recontacter.%0A%0AL equipe PEP Bretill Armor";
-    const lienConfirm = "mailto:" + mailAdherent + "?subject=" + sujetConfirm + "&body=" + corpsConfirm;
-    const lienRefus = "mailto:" + mailAdherent + "?subject=" + sujetRefus + "&body=" + corpsRefus;
+    const corpsConfirm = "Bonjour " + form.prenom + ",%0A%0AVotre reservation du jeu " + form.jeu + " du " + formatDate(form.date_retrait) + " au " + formatDate(form.date_retour) + " est confirmee.%0A%0ACode annulation : " + code + "%0A%0AA bientot !%0A%0AL equipe PEP Bretill Armor";
+    const sujetRefus = encodeURIComponent("Reservation refusee - " + form.jeu);
+    const corpsRefus = "Bonjour " + form.prenom + ",%0A%0ANous sommes desoles, votre demande pour le jeu " + form.jeu + " du " + formatDate(form.date_retrait) + " au " + formatDate(form.date_retour) + " ne peut pas etre acceptee.%0A%0APour annuler, entrez le code " + code + " sur le site dans l onglet Annuler.%0A%0AN hesitez pas a nous recontacter.%0A%0AL equipe PEP Bretill Armor";
+    const lienConfirm = "mailto:" + form.email + "?subject=" + sujetConfirm + "&body=" + corpsConfirm;
+    const lienRefus = "mailto:" + form.email + "?subject=" + sujetRefus + "&body=" + corpsRefus;
+
     fetch("https://api.web3forms.com/submit", {
       method: "POST",
       headers: { "Content-Type": "application/json", "Accept": "application/json" },
       body: JSON.stringify({
         access_key: "a64bb057-88b9-42ee-a773-3dd1a0a0a443",
-        subject: "Nouvelle reservation - " + form.jeu,
+        subject: "Nouvelle reservation - " + form.jeu + " (" + code + ")",
         from_name: form.prenom + " " + form.nom,
         replyto: form.email,
+        Code: code,
         Prenom: form.prenom,
         Nom: form.nom,
         Email: form.email,
@@ -145,18 +171,29 @@ export default function App() {
         Date_retrait: formatDate(form.date_retrait),
         Date_retour: formatDate(form.date_retour),
         Commentaire: form.commentaire || "Aucun",
-        "--- Actions ---": "Cliquez sur un lien ci-dessous pour repondre a l adherent",
-        "CONFIRMER la reservation": lienConfirm,
-        "REFUSER la reservation": lienRefus
+        Actions: "CONFIRMER : " + lienConfirm + " | REFUSER : " + lienRefus
       })
     }).catch(() => {});
 
-    // 3. Confirmation immediate
+    setSubmittedCode(code);
     setSubmitted(true);
     setForm({ prenom:"", nom:"", email:"", telephone:"", jeu:"", date_retrait:"", date_retour:"", adhesion:"", commentaire:"" });
   }
 
-  const C = "#1f94a2", G = "#6dbd69";
+  function handleCancel(e) {
+    e.preventDefault();
+    const code = cancelCode.trim().toUpperCase();
+    const idx = reservations.findIndex(r => r.code && r.code.toUpperCase() === code);
+    if (idx === -1) {
+      setCancelMsg("error");
+      return;
+    }
+    const updated = reservations.filter((_, i) => i !== idx);
+    saveToStorage(updated);
+    setReservations(updated);
+    setCancelMsg("ok");
+    setCancelCode("");
+  }
 
   const S = {
     app: { fontFamily: "sans-serif", background: "#f0ede6", minHeight: "100vh" },
@@ -170,7 +207,7 @@ export default function App() {
     arrowBtn: { background: "none", border: "1.5px solid #ddd", borderRadius: "8px", width: "34px", height: "34px", cursor: "pointer", fontSize: "1.1rem" },
     grid: { display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: "3px" },
     dayHdr: { textAlign: "center", fontSize: "0.7rem", fontWeight: 700, color: "#999", padding: "0.4rem 0", textTransform: "uppercase" },
-    dayCell: (isTd, isSel, hasRes) => ({ minHeight: "60px", borderRadius: "10px", padding: "0.3rem", cursor: "pointer", background: isSel ? C : isTd ? "#e8f7f8" : hasRes ? "#f0faf0" : "#fff", border: isSel ? "2px solid " + C : isTd ? "2px solid " + C : "1.5px solid #eee" }),
+    dayCell: (isTd, isSel, hasRes) => ({ minHeight: "60px", borderRadius: "10px", padding: "0.3rem", cursor: "pointer", background: isSel ? C : isTd ? "#e8f7f8" : hasRes ? "#fff0f0" : "#fff", border: isSel ? "2px solid " + C : isTd ? "2px solid " + C : "1.5px solid #eee" }),
     dayNum: (isSel, isTd) => ({ fontSize: "0.8rem", fontWeight: 700, color: isSel ? "#fff" : isTd ? C : "#333", marginBottom: "3px" }),
     tag: (col) => ({ background: col, color: "#fff", borderRadius: "4px", fontSize: "0.62rem", padding: "1px 4px", marginBottom: "2px", display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }),
     secTitle: { fontSize: "1rem", fontWeight: 700, color: C, borderBottom: "2px solid " + G, paddingBottom: "0.3rem", marginBottom: "1rem", display: "inline-block" },
@@ -181,6 +218,9 @@ export default function App() {
     btn: { width: "100%", padding: "0.9rem", background: C, color: "#fff", border: "none", borderRadius: "10px", fontSize: "0.95rem", fontWeight: 600, cursor: "pointer", marginTop: "0.5rem" },
     badge: (col) => ({ background: col, color: "#fff", borderRadius: "20px", padding: "0.2rem 0.7rem", fontSize: "0.78rem", fontWeight: 600 }),
     resCard: (col) => ({ borderLeft: "4px solid " + col, borderRadius: "8px", padding: "0.9rem", marginBottom: "0.75rem", background: "#fafafa" }),
+    alertRed: { background: "#fff3f3", border: "1.5px solid #c0392b", borderRadius: "8px", padding: "0.75rem", color: "#c0392b", fontSize: "0.85rem", marginTop: "0.5rem" },
+    alertGreen: { background: "#f0faf0", border: "1.5px solid #27ae60", borderRadius: "8px", padding: "0.75rem", color: "#27ae60", fontSize: "0.85rem", marginTop: "0.5rem" },
+    codeBox: { background: "#eef7f8", border: "2px dashed " + C, borderRadius: "10px", padding: "1rem", textAlign: "center", margin: "1rem 0", fontSize: "1.3rem", fontWeight: 700, color: C, letterSpacing: "0.1em" },
   };
 
   if (loading) return (
@@ -198,8 +238,9 @@ export default function App() {
         <img src={LOGO} alt="Du Bout des Doigts" style={{ height: "70px", width: "70px", objectFit: "contain" }} />
         <nav style={S.nav}>
           <button style={S.navBtn(view === "calendrier")} onClick={() => setView("calendrier")}>📅 Calendrier</button>
-          <button style={S.navBtn(view === "reserver")} onClick={() => { setView("reserver"); setSubmitted(false); }}>✏️ Reserver</button>
+          <button style={S.navBtn(view === "reserver")} onClick={() => { setView("reserver"); setSubmitted(false); setErreurDoublon(""); }}>✏️ Reserver</button>
           <button style={S.navBtn(view === "liste")} onClick={() => setView("liste")}>📋 Reservations</button>
+          <button style={S.navBtn(view === "annuler")} onClick={() => { setView("annuler"); setCancelMsg(""); }}>❌ Annuler</button>
         </nav>
       </header>
 
@@ -237,10 +278,8 @@ export default function App() {
                 : selectedDayRes.map(r => (
                   <div key={r.id} style={S.resCard(jeuColor(r.jeu))}>
                     <span style={S.badge(jeuColor(r.jeu))}>{r.jeu}</span>
-                    <div style={{ marginTop: "0.4rem", fontSize: "0.85rem", color: "#555" }}>
-                      📅 {formatDate(r.date_retrait)} → {formatDate(r.date_retour)}
-                    </div>
-                    <div style={{ fontSize: "0.78rem", color: "#c0392b", marginTop: "0.3rem" }}>🔒 Jeu non disponible sur cette periode</div>
+                    <div style={{ marginTop: "0.4rem", fontSize: "0.85rem", color: "#555" }}>📅 {formatDate(r.date_retrait)} vers {formatDate(r.date_retour)}</div>
+                    <div style={{ fontSize: "0.78rem", color: "#c0392b", marginTop: "0.3rem" }}>🔒 Non disponible</div>
                   </div>
                 ))
               }
@@ -254,7 +293,11 @@ export default function App() {
               <div style={{ textAlign: "center", padding: "2rem" }}>
                 <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>✅</div>
                 <h2 style={{ color: C, marginBottom: "0.75rem" }}>Demande envoyee !</h2>
-                <p style={{ color: "#555", marginBottom: "1.5rem" }}>Votre reservation est visible dans le calendrier. Vous recevrez une confirmation sous 48h.</p>
+                <p style={{ color: "#555", marginBottom: "0.5rem" }}>Votre reservation est visible dans le calendrier.</p>
+                <p style={{ color: "#555", marginBottom: "1rem" }}>Vous recevrez une confirmation sous 48h.</p>
+                <p style={{ color: "#555", fontSize: "0.9rem", marginBottom: "0.5rem" }}>Votre code d annulation :</p>
+                <div style={S.codeBox}>{submittedCode}</div>
+                <p style={{ color: "#888", fontSize: "0.8rem", marginBottom: "1.5rem" }}>Conservez ce code pour annuler votre reservation si besoin.</p>
                 <button style={{ ...S.btn, maxWidth: "220px", margin: "0 auto" }} onClick={() => setView("calendrier")}>Voir le calendrier</button>
               </div>
             ) : (
@@ -274,14 +317,10 @@ export default function App() {
                   <label style={S.lbl}>Code adherent *</label>
                   <input style={{ ...S.inp, letterSpacing: "0.1em" }} name="adhesion" required value={form.adhesion} onChange={handleChange} placeholder="Entrez votre code adherent" />
                   {form.adhesion !== "" && form.adhesion.toUpperCase() !== "LUDO2026" && (
-                    <p style={{ fontSize: "0.82rem", color: "#c0392b", marginTop: "0.5rem", background: "#fff3f3", padding: "0.6rem", borderRadius: "6px", borderLeft: "3px solid #c0392b" }}>
-                      Code invalide. Pour adherer, merci de remplir le formulaire et de le retourner sur site ou par email : ludotheque@pepbretillarmor.org
-                    </p>
+                    <div style={S.alertRed}>Code invalide. Pour adherer, merci de remplir le formulaire et de le retourner sur site ou par email : ludotheque@pepbretillarmor.org</div>
                   )}
                   {form.adhesion.toUpperCase() === "LUDO2026" && (
-                    <p style={{ fontSize: "0.82rem", color: "#27ae60", marginTop: "0.5rem", background: "#f0faf0", padding: "0.6rem", borderRadius: "6px", borderLeft: "3px solid #27ae60" }}>
-                      Code adherent valide !
-                    </p>
+                    <div style={S.alertGreen}>Code adherent valide !</div>
                   )}
                 </div>
 
@@ -309,14 +348,14 @@ export default function App() {
                   </div>
                 </div>
 
-                <div style={S.field}>
+                {erreurDoublon !== "" && <div style={S.alertRed}>⚠️ {erreurDoublon}</div>}
+
+                <div style={{ ...S.field, marginTop: "1rem" }}>
                   <label style={S.lbl}>Commentaire (facultatif)</label>
                   <textarea style={{ ...S.inp, minHeight: "80px", resize: "vertical" }} name="commentaire" value={form.commentaire} onChange={handleChange} />
                 </div>
 
-                <button type="submit" style={{ ...S.btn, opacity: saving ? 0.7 : 1 }} disabled={saving}>
-                  {saving ? "Envoi en cours..." : "Envoyer ma demande de reservation"}
-                </button>
+                <button type="submit" style={S.btn}>Envoyer ma demande de reservation</button>
               </form>
             )}
           </div>
@@ -336,13 +375,29 @@ export default function App() {
               : [...filteredRes].sort((a, b) => new Date(a.date_retrait) - new Date(b.date_retrait)).map(r => (
                 <div key={r.id} style={S.resCard(jeuColor(r.jeu))}>
                   <span style={S.badge(jeuColor(r.jeu))}>{r.jeu}</span>
-                  <div style={{ marginTop: "0.4rem", fontSize: "0.85rem", color: "#555" }}>
-                    📅 {formatDate(r.date_retrait)} → {formatDate(r.date_retour)}
-                  </div>
+                  <div style={{ marginTop: "0.4rem", fontSize: "0.85rem", color: "#555" }}>📅 {formatDate(r.date_retrait)} → {formatDate(r.date_retour)}</div>
                   <div style={{ fontSize: "0.78rem", color: "#c0392b", marginTop: "0.3rem" }}>🔒 Non disponible</div>
                 </div>
               ))
             }
+          </div>
+        )}
+
+        {view === "annuler" && (
+          <div style={S.card}>
+            <h2 style={{ color: C, marginBottom: "1rem" }}>Annuler une reservation</h2>
+            <p style={{ color: "#555", marginBottom: "1.5rem", fontSize: "0.9rem" }}>Entrez le code d annulation que vous avez recu lors de votre reservation.</p>
+            {cancelMsg === "ok" && <div style={S.alertGreen}>✅ Votre reservation a bien ete annulee.</div>}
+            {cancelMsg === "error" && <div style={S.alertRed}>❌ Code invalide. Verifiez votre code et reessayez.</div>}
+            {cancelMsg !== "ok" && (
+              <form onSubmit={handleCancel}>
+                <div style={S.field}>
+                  <label style={S.lbl}>Code d annulation</label>
+                  <input style={{ ...S.inp, letterSpacing: "0.15em", textTransform: "uppercase", fontSize: "1.1rem" }} value={cancelCode} onChange={e => { setCancelCode(e.target.value); setCancelMsg(""); }} placeholder="RES-XXXX" required />
+                </div>
+                <button type="submit" style={{ ...S.btn, background: "#c0392b" }}>Annuler ma reservation</button>
+              </form>
+            )}
           </div>
         )}
 
