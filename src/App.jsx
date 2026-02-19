@@ -123,25 +123,12 @@ export default function App() {
 
     // 2. Envoi email Web3Forms en arriere-plan
     const mailAdherent = form.email;
-    const sujetConfirm = encodeURIComponent("Confirmation de votre reservation - " + form.jeu);
-    const corpsConfirm = encodeURIComponent("Bonjour " + form.prenom + "," + "
-
-Votre reservation du jeu " + form.jeu + " du " + formatDate(form.date_retrait) + " au " + formatDate(form.date_retour) + " est confirmee." + "
-
-A bientot a la ludotheque Du Bout des Doigts !" + "
-
-L equipe des PEP Bretill Armor");
-    const sujetRefus = encodeURIComponent("Votre demande de reservation - " + form.jeu);
-    const corpsRefus = encodeURIComponent("Bonjour " + form.prenom + "," + "
-
-Nous sommes desoles, votre demande de reservation du jeu " + form.jeu + " du " + formatDate(form.date_retrait) + " au " + formatDate(form.date_retour) + " ne peut pas etre acceptee." + "
-
-N hesitez pas a nous contacter pour choisir une autre date ou un autre jeu." + "
-
-L equipe des PEP Bretill Armor");
+    const sujetConfirm = encodeURIComponent("Confirmation reservation - " + form.jeu);
+    const corpsConfirm = "Bonjour " + form.prenom + ",%0A%0AVotre reservation du jeu " + form.jeu + " du " + formatDate(form.date_retrait) + " au " + formatDate(form.date_retour) + " est confirmee.%0A%0AA bientot !%0A%0AL equipe PEP Bretill Armor";
+    const sujetRefus = encodeURIComponent("Demande de reservation refusee - " + form.jeu);
+    const corpsRefus = "Bonjour " + form.prenom + ",%0A%0ANous sommes desoles, votre demande pour le jeu " + form.jeu + " du " + formatDate(form.date_retrait) + " au " + formatDate(form.date_retour) + " ne peut pas etre acceptee.%0A%0AN hesitez pas a nous recontacter.%0A%0AL equipe PEP Bretill Armor";
     const lienConfirm = "mailto:" + mailAdherent + "?subject=" + sujetConfirm + "&body=" + corpsConfirm;
     const lienRefus = "mailto:" + mailAdherent + "?subject=" + sujetRefus + "&body=" + corpsRefus;
-
     fetch("https://api.web3forms.com/submit", {
       method: "POST",
       headers: { "Content-Type": "application/json", "Accept": "application/json" },
