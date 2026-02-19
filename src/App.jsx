@@ -226,14 +226,11 @@ export default function App() {
                 ? <p style={{ color: "#888" }}>Aucune reservation ce jour. <button style={{ background: "none", border: "none", color: C, cursor: "pointer", fontWeight: 600 }} onClick={() => { setView("reserver"); setSubmitted(false); }}>Reserver un jeu</button></p>
                 : selectedDayRes.map(r => (
                   <div key={r.id} style={S.resCard(jeuColor(r.jeu))}>
-                    <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "0.5rem" }}>
-                      <div>
-                        <span style={S.badge(jeuColor(r.jeu))}>{r.jeu}</span>
-                        <div style={{ marginTop: "0.4rem", fontWeight: 600 }}>{r.prenom} {r.nom}</div>
-                        <div style={{ fontSize: "0.8rem", color: "#666" }}>{formatDate(r.date_retrait)} vers {formatDate(r.date_retour)}</div>
-                      </div>
-                      <div style={{ fontSize: "0.78rem", color: "#888", textAlign: "right" }}>{r.email}<br />{r.telephone}</div>
+                    <span style={S.badge(jeuColor(r.jeu))}>{r.jeu}</span>
+                    <div style={{ marginTop: "0.4rem", fontSize: "0.85rem", color: "#555" }}>
+                      📅 {formatDate(r.date_retrait)} → {formatDate(r.date_retour)}
                     </div>
+                    <div style={{ fontSize: "0.78rem", color: "#c0392b", marginTop: "0.3rem" }}>🔒 Jeu non disponible sur cette periode</div>
                   </div>
                 ))
               }
@@ -328,15 +325,11 @@ export default function App() {
               ? <p style={{ color: "#888", textAlign: "center", padding: "2rem" }}>Aucune reservation pour l instant.</p>
               : [...filteredRes].sort((a, b) => new Date(a.date_retrait) - new Date(b.date_retrait)).map(r => (
                 <div key={r.id} style={S.resCard(jeuColor(r.jeu))}>
-                  <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "0.5rem" }}>
-                    <div>
-                      <span style={S.badge(jeuColor(r.jeu))}>{r.jeu}</span>
-                      <div style={{ marginTop: "0.4rem", fontWeight: 600 }}>{r.prenom} {r.nom}</div>
-                      <div style={{ fontSize: "0.82rem", color: "#555" }}>{formatDate(r.date_retrait)} vers {formatDate(r.date_retour)}</div>
-                      {r.commentaire && <div style={{ fontSize: "0.8rem", color: "#666", fontStyle: "italic" }}>{r.commentaire}</div>}
-                    </div>
-                    <div style={{ fontSize: "0.8rem", color: "#888", textAlign: "right" }}>{r.email}<br />{r.telephone}</div>
+                  <span style={S.badge(jeuColor(r.jeu))}>{r.jeu}</span>
+                  <div style={{ marginTop: "0.4rem", fontSize: "0.85rem", color: "#555" }}>
+                    📅 {formatDate(r.date_retrait)} → {formatDate(r.date_retour)}
                   </div>
+                  <div style={{ fontSize: "0.78rem", color: "#c0392b", marginTop: "0.3rem" }}>🔒 Non disponible</div>
                 </div>
               ))
             }
