@@ -351,6 +351,16 @@ export default function App() {
               })}
             </div>
           </div>
+          <div style={{ textAlign:"center", margin:"0.75rem 0" }}>
+            <a
+              href="https://www.pepbretillarmor.org/presentation-et-adhesion/"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ display:"inline-flex", alignItems:"center", gap:"0.4rem", background:"#eef7f8", color:C, border:"1.5px solid "+C, borderRadius:"20px", padding:"0.5rem 1.2rem", fontSize:"0.85rem", fontWeight:700, textDecoration:"none" }}
+            >
+              📋 Présentation &amp; Adhésion
+            </a>
+          </div>
           {selectedDay && (
             <div style={S.card}>
               <div style={S.secTitle}>{selectedDay.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}</div>
