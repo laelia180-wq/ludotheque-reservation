@@ -45,13 +45,15 @@ async function deleteReservation(code) {
 const LOGO = "https://www.pepbretillarmor.org/wp-content/uploads/2026/02/Logo-2.png";
 
 const JEUX = {
-  "Jeux de strategie": ["Awale","Dames","Echecs tactiles","Four Senses","Quarto Access","Rush Hour","Solitaire","Sudoku"],
-  "Jeux de cartes": ["7 Familles Braille","Jeu de 32 cartes Braille","Jeu de 54 cartes Braille","Mille Bornes Braille","MOW Access","UNO Braille"],
-  "Jeux sensoriels": ["Barres Tactiles","Memory tactile tissu","Memory sons","Tactilo Loto","Le Toucher Montessori","Little Memo","Loto des 40"],
-  "Jeux cooperatifs": ["Little Cooperation","Hop Hop Hop"],
-  "Jeux d adresse": ["Mikado a disques","SOS Ouistiti","Tour tombante","Pic Pirate"],
-  "Puzzles Construction": ["Jeu du Cafard","Legos Braille","Puzzle Arc en Ciel","Puzzle Coeur","Il etait une ferme","Rubiks Cube tactile"],
-  "Autres jeux": ["Bata Waf","Bogoss","Branle Bas de Wombat","Croque Carotte","Cuisto Dingo","La Course des Tortues","Le Renard des Bois","Les Petites Souris","Morpion maison","Perlinpinpin","Petits Chevaux","Puissance 4 modifie","Tic Tac Boum Junior","Woolfy","Yams"]
+  "Jeux de combinaison": [    "Jeu de 7 familles braille",    "Jeu de 7 familles qui braille fort",    "Jeu de 7 familles maison",    "Detrak",    "Four Senses",    "Gobblet Gobblers",    "Perlinpinpin",    "Quarto Access",    "Puissance 4",    "Rummikub XXL",    "Triominos XXL",     "Yams" ],
+  "Jeux de cartes": [    "Jeu de 32 cartes tactiles",    "Jeu de 54 cartes braille",    "Jeu de 54 cartes geantes",    "Jeu de 54 cartes large print",    "Jeu de 54 cartes extra visible",    "Double jeu de 54 cartes anglais"  ],
+  "Jeux d association": [    "Barres Tactiles",    "Spiky",    "Dominos tactiles points",    "Loto des 40",    "Mistigri",    "Shut the box",    "Tactilo Loto",    "Maitre renard",    "Uno Braille",    "Memo tortue",    "Le Toucher Montessori",    "Memory sons",    "Memory tactile tissu",    "Little Mime",    "Dominos tactiles formes",    "Little Memo",    "Bogoss",    "Mistiboo"  ],
+  "Jeux de reflexion et de strategie": [    "Awale",    "Dames",    "Echecs tactiles",    "Hex",    "MOW Access",    "Rush Hour",    "Solitaire",    "Sudoku",    "Qwirkle"  ],
+  "Jeux de hasard": [    "Bata Waf",    "Cuisto Dingo",    "Jeu du Cafard",    "Mille Bornes Braille",    "Mon premier verger",    "SOS Ouistiti",    "Flip 7",    "Le Cochon qui rit"  ],
+  "Jeux de construction": [    "Branle Bas de Wombat",    "Tour tombante"  ],
+  "Jeux d adresse et de manipulation": [    "Legos Braille",    "Mikado a disques"  ],
+  "Jeux de parcours": [    "TTMC Access",    "Jeu de l oie",    "La Course des Tortues",    "Little Cooperation",    "Woolfy",    "Allez les Escargots",    "Mahe",    "Hop Hop Hop",    "Croque Carotte",    "Petits Chevaux"  ],
+  "Jeux d expression": [    "Tic Tac Boum Junior"  ]
 };
 
 const COULEURS = ["#1f94a2","#6dbd69","#e67e22","#8e44ad","#2980b9","#c0392b","#1f94a2","#6dbd69","#e67e22","#8e44ad"];
