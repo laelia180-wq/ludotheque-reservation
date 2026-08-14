@@ -198,16 +198,17 @@ export default function App() {
     setSaving(true);
     try {
       await insertReservation({
-        prenom: form.prenom,
-        nom: form.nom,
-        email: form.email,
-        telephone: form.telephone || null,
-        jeu: form.jeu,
-        date_retrait: form.date_retrait,
-        date_retour: form.date_retour,
-        commentaire: form.commentaire || null,
-        code: code,
-      });
+  prenom: form.prenom,
+  nom: form.nom,
+  email: form.email,
+  telephone: form.telephone || null,
+  jeu: form.jeu,
+  date_retrait: form.date_retrait,
+  date_retour: form.date_retour,
+  commentaire: form.commentaire || null,
+  code: code,
+  adhesion: form.adhesion,
+});
       await refreshReservations();
 
       // Email notification via Web3Forms
