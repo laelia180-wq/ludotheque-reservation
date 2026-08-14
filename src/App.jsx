@@ -156,7 +156,8 @@ export default function App() {
 
   const days = getMonthDays(calYear, calMonth);
   const selectedDayRes = selectedDay ? resForDay(selectedDay) : [];
-  const filteredRes = filterJeu ? reservations.filter(r => r.jeu === filterJeu) : reservations;
+  const activeReservations = reservations.filter(r => new Date(r.date_retour) >= today);
+const filteredRes = filterJeu ? activeReservations.filter(r => r.jeu === filterJeu) : activeReservations;
   const maxRetour = form.date_retrait ? addDays(form.date_retrait, 31) : "";
 
   function prevMonth() {
